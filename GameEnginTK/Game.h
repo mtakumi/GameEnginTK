@@ -5,7 +5,11 @@
 #pragma once
 
 #include "StepTimer.h"
-
+#include <PrimitiveBatch.h>
+#include <VertexTypes.h>
+#include <Effects.h>
+#include <CommonStates.h>
+#include <SimpleMath.h>
 
 // A basic game implementation that creates a D3D11 device and
 // provides a game loop.
@@ -59,6 +63,10 @@ private:
     Microsoft::WRL::ComPtr<IDXGISwapChain1>         m_swapChain1;
     Microsoft::WRL::ComPtr<ID3D11RenderTargetView>  m_renderTargetView;
     Microsoft::WRL::ComPtr<ID3D11DepthStencilView>  m_depthStencilView;
+
+	std::unique_ptr<DirectX::PrimitiveBatch<DirectX::VertexPositionColor>> primitiveBatch;
+	std::unique_ptr<DirectX::BasicEffect> basicEffect;
+	Microsoft::WRL::ComPtr<ID3D11InputLayout> inputLayout;
 
     // Rendering loop timer.
     DX::StepTimer                                   m_timer;

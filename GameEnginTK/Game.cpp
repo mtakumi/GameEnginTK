@@ -2,12 +2,21 @@
 // Game.cpp
 //
 
+
+
 #include "pch.h"
 #include "Game.h"
+//#include <PrimitiveBatch.h>
+//#include <VertexTypes.h>
+//#include <Effects.h>
+//#include <CommonStates.h>
+//#include <SimpleMath.h>
+
 
 extern void ExitGame();
 
 using namespace DirectX;
+using namespace DirectX::SimpleMath;
 
 using Microsoft::WRL::ComPtr;
 
@@ -36,6 +45,30 @@ void Game::Initialize(HWND window, int width, int height)
     m_timer.SetFixedTimeStep(true);
     m_timer.SetTargetElapsedSeconds(1.0 / 60);
     */
+
+	//	初期化処理はここで行う
+	
+	//m_d3dContextはコムポインタなのでGet()関数を使って元のポインタを渡す
+	primitiveBatch = std::make_unique<PrimitiveBatch<VertexPositionColor>>(m_d3dContext.Get());
+
+
+
+	basicEffect = std::make_unique<BasicEffect>(m_d3dDevice.Get());
+
+	basicEffect->SetProjection(XMMatrixOrthographicOffCenterRH(0,
+		m_outputWidth, m_outputHeight, 0, 0, 1));
+	basicEffect->SetVertexColorEnabled(true);
+
+	void const* shaderByteCode;
+	size_t byteCodeLength;
+
+	basicEffect->GetVertexShaderBytecode(&shaderByteCode, &byteCodeLength);
+
+	m_d3dDevice->CreateInputLayout(VertexPositionColor::InputElements,
+		VertexPositionColor::InputElementCount,
+		shaderByteCode, byteCodeLength,
+		inputLayout.GetAddressOf());
+
 }
 
 // Executes the basic game loop.
@@ -56,21 +89,39 @@ void Game::Update(DX::StepTimer const& timer)
 
     // TODO: Add your game logic here.
     elapsedTime;
+	
+	//	更新処理はここで行う
+
 }
 
 // Draws the scene.
 void Game::Render()
 {
     // Don't try to render anything before the first Update.
-    if (m_timer.GetFrameCount() == 0)
+	//	更新処理が行われていたかどうかのチェック
+	if (m_timer.GetFrameCount() == 0)
     {
         return;
     }
 
+	//	描画をリセット
     Clear();
 
     // TODO: Add your rendering code here.
+	//	描画処理
+	CommonStates states(m_d3dDevice.Get());
+	m_d3dContext->OMSetBlendState(states.Opaque(), nullptr, 0xFFFFFFFF);
+	m_d3dContext->OMSetDepthStencilState(states.DepthNone(), 0);
+	m_d3dContext->RSSetState(states.CullNone());
 
+	basicEffect->Apply(m_d3dContext.Get());
+	m_d3dContext->IASetInputLayout(inputLayout.Get());
+
+	primitiveBatch->Begin();
+	primitiveBatch->DrawLine(VertexPositionColor(Vector3(0,0,0),Colors::Black), VertexPositionColor(Vector3(600, 600, 0), Colors::Red));
+	primitiveBatch->End();
+
+	//	描画を適応
     Present();
 }
 
